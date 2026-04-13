@@ -1,0 +1,270 @@
+---
+title: "Diamonds"  
+author: "Prera & Agrawal"     
+
+# Output formats and their specific options
+format:
+  pdf:
+    toc: true
+    number-sections: true
+    pdf-engine: lualatex
+    keep-tex: true
+  html:
+    toc: true
+    theme: cosmo
+    code-fold: true
+  docx:
+    reference-doc: custom.docx
+    
+# Global execution behavior
+code-line-numbers: false
+colorlinks: true
+urlcolor: purple
+citecolor: purple
+execute:      
+  message: false                                
+  warning: false
+  include: false                         
+  freeze: auto   
+
+# Appearance and structure
+fontsize: 11pt                                  
+highlight-style: tango                          
+toc-title: Contents    
+toccolor: blue
+toc-depth: 3                                    
+number-depth: 3    
+
+# Figures
+fig-align: center
+fig-cap-location: bottom
+
+# Citations
+cite-method: citeproc                           
+# bibliography: references.bib                    
+# csl: apa.csl                                    
+
+# Page geometry (PDF)
+geometry:       
+  - top=0.75in                                  
+  - left=0.75in                                 
+  - bottom=0.75in                               
+  - right=0.75in                                
+
+# Additional LaTeX control
+header-includes:                                
+  - \usepackage{hyperref}
+  -  \newenvironment{customabstract}{
+        \begin{center}
+        {\bfseries Abstract}\par\vspace{0.5em}
+        \begin{minipage}{0.8\linewidth}
+      }{
+        \end{minipage}
+        \end{center}
+      }
+---
+
+\newpage
+
+\begin{customabstract}
+This is my abstract
+\end{customabstract}
+
+\newpage
+
+# Introduction
+
+# Exploratory Data Analysis
+
+```{r}
+### important packages
+library(tidyverse)
+library(patchwork)
+library(dplyr)
+```
+
+```{r}
+diamonds <- read_csv("diamonds.csv")
+```
+
+```{r}
+diamonds |> glimpse()
+```
+
+```{r}
+#| include: true
+#| echo: false
+#| fig-width: 9
+#| fig-height: 5
+#| fig-align: "center"
+#| fig-pos: "H"
+#| fig-cap: "Price vs Diamonds"
+#| label: fig-price-vs-diamond
+
+diamonds_sampled <- diamonds |>
+  slice_sample(n = 20000)
+
+diamonds_sampled <- diamonds_sampled |>
+  mutate(volume = x * y * z)
+
+g1 <- diamonds |> 
+  ggplot(aes(x = carat, y = price )) +
+  geom_point(size = 0.0001)+
+  coord_cartesian(xlim = c(0, 3.5)) +
+  theme_bw()
+
+g2 <- diamonds |>
+  ggplot(aes(x =carat, y = sqrt(price))) +
+  geom_point(size = 0.0001) +
+  coord_cartesian(xlim = c(0, 3.5)) +
+  theme_bw()
+
+g3 <- diamonds |>
+  ggplot(aes(x =carat, y = log(price))) +
+  geom_point(size = 0.0001) +
+  coord_cartesian(xlim = c(0, 3.5)) +
+  theme_bw()
+    
+(g1 / g3) | g2
+```
+
+```{r}
+#| include: true
+#| echo: false
+#| fig-width: 9
+#| fig-height: 5
+#| fig-align: "center"
+#| fig-pos: "H"
+#| fig-cap: "Price vs volume"
+#| label: fig-price-vs-volume
+
+g1 <- diamonds_sampled |>
+  ggplot(aes(x = volume, y = price)) +
+  geom_point(size = 0.0001) +
+  theme_bw()
+
+g2 <- diamonds |>
+  ggplot(aes(x = x, y = price)) +
+  geom_point(size = 0.0001) +
+  theme_bw()
+
+g3 <- diamonds |>
+  ggplot(aes(x = y, y = price)) +
+  geom_point(size = 0.0001) +
+  theme_bw()
+
+g4 <- diamonds |>
+  ggplot(aes(x = z, y = price)) +
+  geom_point(size = 0.0001) +
+  theme_bw()
+
+(g1 + g2) / (g3 + g4)
+```
+
+```{r}
+#| include: true
+#| echo: false
+#| fig-width: 9
+#| fig-height: 5
+#| fig-align: "center"
+#| fig-pos: "H"
+#| fig-cap: "Price vs Diamonds"
+#| label: fig-price-vs-diamond-vs-cut
+
+g1 <- diamonds_sampled |> 
+  ggplot(aes(x = carat, y = price, color = cut)) +
+  geom_point(size = 0.0001)+
+  theme_bw()
+
+g2 <- diamonds_sampled |>
+  ggplot(aes(x =carat, y = log(price), color = cut)) +
+  geom_point(size = 0.0001) +
+  theme_bw()
+
+g3 <- diamonds_sampled |>
+  ggplot(aes(x = carat, y = sqrt(price), color = cut)) +
+  geom_point(size = 0.001) +
+  geom_smooth(method = "lm", se = FALSE) +
+  coord_cartesian(ylim = c(20, 130), xlim = c(0, 3.5)) +
+  theme_bw() +
+  labs(title = "Linear Regression on Price, Carats and Cut of Diamonds.",
+  x = "Price",
+  y = "Carat")
+    
+g3
+```
+
+```{r}
+#| include: true
+#| echo: false
+#| fig-width: 9
+#| fig-height: 4
+#| fig-align: "center"
+#| fig-pos: "H"
+#| fig-cap: "Histogram of Diamond Prices."
+#| label: fig-prices-hist
+
+diamonds |>
+  ggplot(aes(x = price)) +
+  geom_histogram(fill = "lightblue", color = "black", bins = 150) +
+  theme_bw() +
+  labs(
+    title = "Histogram of Diamond Prices",
+    x = "Price",
+    y = "Count"
+  )
+
+
+```
+
+```{r}
+#| include: true
+#| echo: false
+#| fig-width: 9
+#| fig-height: 4
+#| fig-align: "center"
+#| fig-pos: "H"
+#| fig-cap: "Histogram of Diamond depth and price"
+#| label: fig-prices-depth-scatt
+
+diamonds |>
+    ggplot(aes(x = depth, y = price )) +
+    geom_point(size = 0.0001, color= "pink") +
+    theme_bw()
+    labs(
+    title = "Histogram of Diamond Prices vs depth",
+    x = "depth",
+    y = "price"
+     )
+```
+
+```{r}
+### data example
+data(mtcars)
+mtcars |> glimpse()
+```
+
+```{r}
+#| include: true
+#| echo: false 
+#| fig-width: 6
+#| fig-height: 4
+#| fig-align: "center"
+#| fig-pos: "H"
+#| fig-cap: "Caption here"
+#| label: fig-fig1
+
+### a graph
+mtcars |> 
+  ggplot(aes(x = hp, y = mpg)) +
+  geom_point()+
+  theme_bw()
+```
+
+# Methods
+
+@fig-price-vs-diamond
+
+# Conclusion
+
+# References
