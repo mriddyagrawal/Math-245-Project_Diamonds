@@ -203,6 +203,16 @@ This is my abstract
 
 \end{figure}%
 
+Firstly, we tried to understand the relationship of Diamond prices with
+the predictors we have in the dataset. The first obvious predictor to
+consider was carats, as popularized by advertisements on the Fifth
+Avenue by De Beers, ``Bigger is Better.'' (Cite the book Many Meanings
+of Diamonds, Susan Falls) We guessed initially that it would not be a
+linear relationship, thus, we immediately applied a logarithmic
+transformation. To our dismay, the graph just looked reflected and after
+an hour of other forms of data exploration, we tried applying a square
+root transformation, and the graph became immediately linear.
+
 \begin{figure}[H]
 
 \centering{
@@ -214,6 +224,19 @@ This is my abstract
 \caption{\label{fig-price-vs-volume}Price vs volume}
 
 \end{figure}%
+
+Maybe talk about how the slopes compare to each other. The first volume
+graph is obvious, but the difference between the slopes of the other 3
+seems to be quite different. Which means with growing depth, the diamond
+price increases faster as compared to the increase in length or width.
+
+Apart from that, it is pretty fascinating that the price is just
+correlated exponentially with the volume, and thus also exponentially
+with the rest of the items.
+
+If we were to strictly stick to a linear regression, we should not be
+caring about x, y, and z, we may lose some information but we need to
+use volume because we cannot cube the x, y, and z.
 
 \begin{figure}[H]
 
@@ -256,18 +279,6 @@ This is my abstract
 
 \caption{\label{fig-prices-depth-scatt}Histogram of Diamond depth and
 price}
-
-\end{figure}%
-
-\begin{figure}[H]
-
-\centering{
-
-\pandocbounded{\includegraphics[keepaspectratio]{MTH-245-Project-QMD-Starter-File_files/figure-pdf/fig-fig1-1.pdf}}
-
-}
-
-\caption{\label{fig-fig1}Caption here}
 
 \end{figure}%
 

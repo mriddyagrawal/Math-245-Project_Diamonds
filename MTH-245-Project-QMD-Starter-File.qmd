@@ -128,6 +128,10 @@ g3 <- diamonds |>
 (g1 / g3) | g2
 ```
 
+
+Firstly, we tried to understand the relationship of Diamond prices with the predictors we have in the dataset. The first obvious predictor to consider was carats, as popularized by advertisements on the Fifth Avenue by De Beers, "Bigger is Better." (Cite the book Many Meanings of Diamonds, Susan Falls) We guessed initially that it would not be a linear relationship, thus, we immediately applied a logarithmic transformation. To our dismay, the graph just looked reflected and after an hour of other forms of data exploration, we tried applying a square root transformation, and the graph became immediately linear. 
+
+
 ```{r}
 #| include: true
 #| echo: false
@@ -139,27 +143,38 @@ g3 <- diamonds |>
 #| label: fig-price-vs-volume
 
 g1 <- diamonds_sampled |>
-  ggplot(aes(x = volume, y = price)) +
+  ggplot(aes(x = volume, y = sqrt(price))) +
   geom_point(size = 0.0001) +
+  coord_cartesian(xlim = c(0, 1000)) +
   theme_bw()
 
-g2 <- diamonds |>
-  ggplot(aes(x = x, y = price)) +
+g2 <- diamonds_sampled |>
+  ggplot(aes(x = x^3, y = sqrt(price))) +
   geom_point(size = 0.0001) +
+  coord_cartesian(xlim = c(0, 1000)) +
   theme_bw()
 
-g3 <- diamonds |>
-  ggplot(aes(x = y, y = price)) +
+g3 <- diamonds_sampled |>
+  ggplot(aes(x = y^3, y = sqrt(price))) +
   geom_point(size = 0.0001) +
+  coord_cartesian(xlim = c(0, 1000)) +
   theme_bw()
 
-g4 <- diamonds |>
-  ggplot(aes(x = z, y = price)) +
+g4 <- diamonds_sampled |>
+  ggplot(aes(x = z^3, y = sqrt(price))) +
   geom_point(size = 0.0001) +
+  coord_cartesian(xlim = c(0, 1000)) +
   theme_bw()
 
 (g1 + g2) / (g3 + g4)
 ```
+
+Maybe talk about how the slopes compare to each other. The first volume graph is obvious, but the difference between the slopes of the other 3 seems to be quite different. Which means with growing depth, the diamond price increases faster as compared to the increase in length or width.
+
+Apart from that, it is pretty fascinating that the price is just correlated exponentially with the volume, and thus also exponentially with the rest of the items.
+
+If we were to strictly stick to a linear regression, we should not be caring about x, y, and z, we may lose some information but we need to use volume because we cannot cube the x, y, and z.
+
 
 ```{r}
 #| include: true
@@ -242,23 +257,6 @@ diamonds |>
 ### data example
 data(mtcars)
 mtcars |> glimpse()
-```
-
-```{r}
-#| include: true
-#| echo: false 
-#| fig-width: 6
-#| fig-height: 4
-#| fig-align: "center"
-#| fig-pos: "H"
-#| fig-cap: "Caption here"
-#| label: fig-fig1
-
-### a graph
-mtcars |> 
-  ggplot(aes(x = hp, y = mpg)) +
-  geom_point()+
-  theme_bw()
 ```
 
 # Methods
