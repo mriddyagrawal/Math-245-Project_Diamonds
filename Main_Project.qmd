@@ -327,6 +327,7 @@ data(mtcars)
 mtcars |> glimpse()
 ```
 
+
 # Methods
 
 @fig-price-vs-diamond

@@ -327,6 +327,20 @@ data(mtcars)
 mtcars |> glimpse()
 ```
 
+```{r}
+diamonds$cut_num <- as.numeric(factor(diamonds$cut,
+  levels = c("Fair", "Good", "Very Good", "Premium", "Ideal"),
+  ordered = TRUE))
+
+diamonds$color_num <- as.numeric(factor(diamonds$color,
+  levels = c("J", "I", "H", "G", "F", "E", "D"),
+  ordered = TRUE))
+
+diamonds$clarity_num <- as.numeric(factor(diamonds$clarity,
+  levels = c("I1", "SI2", "SI1", "VS2", "VS1", "VVS2", "VVS1", "IF"),
+  ordered = TRUE))
+
+```
 
 ```{r}
 first_order_model = lm(price ~ ., data = diamonds)
@@ -342,6 +356,7 @@ Pretty good, now, lets look at the qq plot and the constant variance requirement
 source("https://cipolli.com/students/code/plotResiduals.R")
 plotResiduals(first_order_model)
 ```
+
 
 
 # Methods
