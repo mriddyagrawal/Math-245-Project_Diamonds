@@ -373,8 +373,60 @@ plotResiduals(first_order_model.transformed)
 
 ```
 
+```{r}
+model_log <- lm(log(price) ~ carat + cut_num + color_num + clarity_num, data = diamonds)
+plotResiduals(model_log)
+```
 
-# Methods
+```{r}
+model2 <- lm(log(price) ~ carat + I(carat^2) + cut_num + color_num + clarity_num,
+             data = diamonds)
+
+plotResiduals(model2)
+```
+
+```{r}
+model3 <- lm(log(price) ~ carat + I(carat^2) + cut_num + color_num + clarity_num +
+               carat:cut_num + carat:color_num + carat:clarity_num,
+             data = diamonds)
+
+plotResiduals(model3)
+```
+
+```{r}
+model4 <- lm(log(price) ~ carat + I(carat^2) + cut + color + clarity,
+             data = diamonds)
+
+plotResiduals(model4)
+
+```
+
+```{r}
+model5 <- lm(log(price) ~ carat + I(carat^2) + cut + color + clarity +
+               carat:cut + carat:color + carat:clarity,
+             data = diamonds)
+
+plotResiduals(model5)
+
+```
+
+```{r}
+m1 <- lm(log(price) ~ carat + cut_num + color_num + clarity_num, data = diamonds)
+
+m2 <- lm(log(price) ~ carat + I(carat^2) + cut_num + color_num + clarity_num, data = diamonds)
+
+m3 <- lm(log(price) ~ carat + I(carat^2) + cut + color + clarity, data = diamonds)
+
+m4 <- lm(log(price) ~ carat + I(carat^2) + cut + color + clarity +
+           carat:cut + carat:color + carat:clarity, data = diamonds)
+
+m1
+m2
+m3
+m4
+```
+
+# Methodst
 
 @fig-price-vs-diamond
 
