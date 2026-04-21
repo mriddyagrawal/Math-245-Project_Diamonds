@@ -330,7 +330,7 @@ mtcars |> glimpse()
 ```{r}
 diamonds$cut_num <- as.numeric(factor(diamonds$cut,
   levels = c("Fair", "Good", "Very Good", "Premium", "Ideal"),
-  ordered = TRUE))
+  ordered = TRUE)) 
 
 diamonds$color_num <- as.numeric(factor(diamonds$color,
   levels = c("J", "I", "H", "G", "F", "E", "D"),
