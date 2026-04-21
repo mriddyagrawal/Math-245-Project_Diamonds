@@ -329,7 +329,7 @@ mtcars |> glimpse()
 
 
 ```{r}
-first_order_model = lm(price ~ ., data = diamonds)
+first_order_model <- lm(price ~ ., data = diamonds)
 ```
 
 ```{r}
@@ -343,6 +343,21 @@ source("https://cipolli.com/students/code/plotResiduals.R")
 plotResiduals(first_order_model)
 ```
 
+Now, this is clearly problematic. Let's try the transformation now.
+
+```{r}
+first_order_model.transformed <- lm(sqrt(price) ~ ., data = diamonds)
+
+```
+
+```{r}
+summary(first_order_model.transformed)
+```
+
+```{r}
+plotResiduals(first_order_model.transformed)
+
+```
 
 # Methods
 
