@@ -335,6 +335,7 @@ The first order model:
 first_order_model<- lm(price ~ carat + cut + clarity + color + x + y + z + depth + table, data = diamonds)
 ```
 
+```{r}
 summary(first_order_model)
 ```
 
