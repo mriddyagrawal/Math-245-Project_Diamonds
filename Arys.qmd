@@ -329,7 +329,14 @@ mtcars |> glimpse()
 
 # Methods
 
-@fig-price-vs-diamond
+The first order model:
+
+```{r}
+first_order_model<- lm(price ~ carat + cut + clarity + color + x + y + z + depth + table, data = diamonds)
+```
+
+summary(first_order_model)
+```
 
 # Conclusion
 

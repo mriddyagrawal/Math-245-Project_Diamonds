@@ -327,6 +327,23 @@ data(mtcars)
 mtcars |> glimpse()
 ```
 
+
+```{r}
+first_order_model = lm(price ~ ., data = diamonds)
+```
+
+```{r}
+summary(first_order_model)
+```
+
+Pretty good, now, lets look at the qq plot and the constant variance requirements. We have seen before that we might need some transformation by seeing the relationships with the other variables, and we should focus on it.
+
+```{r}
+source("https://cipolli.com/students/code/plotResiduals.R")
+plotResiduals(first_order_model)
+```
+
+
 # Methods
 
 @fig-price-vs-diamond
