@@ -428,12 +428,16 @@ model_log <- lm(log(price) ~ carat + cut + color + clarity, data = diamonds)
 plotResiduals(model_log)
 ```
 
+For Model 2, we used log(price) as the response and included carat, carat\^2, cut, color, and clarity as predictors. We added the squared carat term because the relationship between carat and price did not look completely straight. This model helps show how price changes based on size and quality.
+
 ```{r}
 model2 <- lm(log(price) ~ carat + I(carat^2) + cut + color + clarity,
              data = diamonds)
 
 plotResiduals(model2)
 ```
+
+For Model 3, we used the same variables as Model 2, but I also added interaction terms between carat and cut, color, and clarity. We did this to see if the effect of carat on price changes depending on the diamond’s quality. This model is more flexible than Model 2.
 
 ```{r}
 model3 <- lm(log(price) ~ carat + I(carat^2) + cut + color + clarity +
@@ -448,6 +452,8 @@ summary(model3)
 
 ```
 
+For Model 4, I again used log(price) with carat, carat\^2, cut, color, and clarity. This model is very similar to Model 2, but it uses the original versions of cut, color, and clarity instead of the factor versions. We used it to compare whether that changes the results.\
+
 ```{r}
 model4 <- lm(log(price) ~ carat + I(carat^2) + cut + color + clarity,
              data = diamonds)
@@ -455,6 +461,8 @@ model4 <- lm(log(price) ~ carat + I(carat^2) + cut + color + clarity,
 plotResiduals(model4)
 
 ```
+
+For Model 5, we took Model 4 and added interaction terms between carat and cut, color, and clarity. This lets the relationship between carat and price be different for different types of diamonds. We used this model to check whether adding those interactions improves the fit.
 
 ```{r}
 model5 <- lm(log(price) ~ carat + I(carat^2) + cut + color + clarity +
@@ -464,8 +472,6 @@ model5 <- lm(log(price) ~ carat + I(carat^2) + cut + color + clarity +
 plotResiduals(model5)
 
 ```
-
-Model 4 with log(price) as the response, a quadratic term for carat, and cut, color aandclarity included as categorical predictors. This model provides a strong improvement in the residuals-versus-fitted plot while also treating the categorical variables in a more appropriate way than coding them as numeric.
 
 ```{r}
 m1 <- lm(log(price) ~ carat + cut + color + clarity, data = diamonds)
