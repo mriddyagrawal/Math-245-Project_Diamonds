@@ -488,6 +488,16 @@ logLik(model.1)
 
 ```
 
+```{r}
+library(GGally)
+ggpairs(diamonds, columns = c(2:14))
+```
+
+```{r}
+library(GGally)
+ggpairs(diamonds, columns = c(2:5))
+```
+
 A negativel og-likelihood is expected, as we are usually taking the ln() of numbers less than 1. A higherlog-likelihood (less negative) means the model fits the data better.
 
 ```{r}
@@ -573,6 +583,50 @@ round(summary(model.backward.bic)$coefficients, 4)
 
 summary(model.backward.bic)$adj.r.squared
 ```
+
+forward selection
+
+```{r}
+library(MASS)
+
+intercept.model <- lm(popularity ~ 1, data = spot.sounds)
+model.first.order <- lm(popularity ~ ., data = spot.sounds)
+
+### forward selection with AIC
+stepAIC(intercept.model,
+        direction = "forward",
+        trace = FALSE,
+        scope = list(lower = intercept.model, upper = model.first.order))
+
+### forward selection with BIC
+stepAIC(intercept.model,
+        direction = "forward",
+        k = log(nrow(spot.sounds)),
+        trace = FALSE,
+        scope = list(lower = intercept.model, upper = model.first.order))
+
+
+
+```
+
+stepwise selection
+
+```{r}
+### stepwise selection with AIC
+stepAIC(intercept.model,
+        direction = "both",
+        trace = FALSE,
+        scope = list(lower = intercept.model, upper = model.first.order))
+
+### stepwise selection with BIC
+stepAIC(intercept.model,
+        direction = "both",
+        k = log(nrow(spot.sounds)),
+        trace = FALSE,
+        scope = list(lower = intercept.model, upper = model.first.order))
+```
+
+summary them all in a table like (handout 16)
 
 # Methodst
 
