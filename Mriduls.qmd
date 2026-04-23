@@ -366,7 +366,6 @@ summary(first_order_model.transformed)
 plotResiduals(first_order_model.transformed)
 ```
 
-
 ```{r}
 library(MASS)
 
@@ -384,23 +383,27 @@ my_model_new <- lm(price_t ~ ., data = diamonds)
 ```{r}
 summary(my_model_new)
 
-model_log <- lm(log(price) ~ carat + cut_num + color_num + clarity_num, data = diamonds)
+model_log <- lm(log(price) ~ carat + cut_f + color_f + clarity_f, data = diamonds)
 plotResiduals(model_log)
 ```
 
 ```{r}
-model2 <- lm(log(price) ~ carat + I(carat^2) + cut_num + color_num + clarity_num,
+model2 <- lm(log(price) ~ carat + I(carat^2) + cut_f + color_f + clarity_f,
              data = diamonds)
 
 plotResiduals(model2)
 ```
 
 ```{r}
-model3 <- lm(log(price) ~ carat + I(carat^2) + cut_num + color_num + clarity_num +
-               carat:cut_num + carat:color_num + carat:clarity_num,
+model3 <- lm(log(price) ~ carat + I(carat^2) + cut_f + color_f + clarity_f +
+               carat:cut_f + carat:color_f + carat:clarity_f,
              data = diamonds)
 
 plotResiduals(model3)
+```
+
+```{r}
+summary(model3)
 ```
 
 ```{r}
@@ -421,9 +424,9 @@ plotResiduals(model5)
 ```
 
 ```{r}
-m1 <- lm(log(price) ~ carat + cut_num + color_num + clarity_num, data = diamonds)
+m1 <- lm(log(price) ~ carat + cut_f + color_f + clarity_f, data = diamonds)
 
-m2 <- lm(log(price) ~ carat + I(carat^2) + cut_num + color_num + clarity_num, data = diamonds)
+m2 <- lm(log(price) ~ carat + I(carat^2) + cut_f + color_f + clarity_f, data = diamonds)
 
 m3 <- lm(log(price) ~ carat + I(carat^2) + cut + color + clarity, data = diamonds)
 
