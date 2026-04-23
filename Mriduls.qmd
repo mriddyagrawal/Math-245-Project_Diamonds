@@ -737,6 +737,92 @@ stepAIC(intercept.model,
         scope = list(lower = intercept.model, upper = interaction.model))
 ```
 
+Summary
+
+```{r}
+### backward selection with AIC
+model1 <- stepAIC(interaction.model,
+                  direction = "backward",
+                  trace = FALSE,
+                  scope = list(lower = intercept.model, upper = interaction.model))
+
+### backward selection with BIC
+model2 <- stepAIC(interaction.model,
+                  direction = "backward",
+                  k = log(nrow(diamonds.data)),
+                  trace = FALSE,
+                  scope = list(lower = intercept.model, upper = interaction.model))
+
+### forward selection with AIC
+model3 <- stepAIC(intercept.model,
+                  direction = "forward",
+                  trace = FALSE,
+                  scope = list(lower = intercept.model, upper = interaction.model))
+
+### forward selection with BIC
+model4 <- stepAIC(intercept.model,
+                  direction = "forward",
+                  k = log(nrow(diamonds.data)),
+                  trace = FALSE,
+                  scope = list(lower = intercept.model, upper = interaction.model))
+
+### stepwise selection with AIC
+model5 <- stepAIC(intercept.model,
+                  direction = "both",
+                  trace = FALSE,
+                  scope = list(lower = intercept.model, upper = interaction.model))
+
+### stepwise selection with BIC
+model6 <- stepAIC(intercept.model,
+                  direction = "both",
+                  k = log(nrow(diamonds.data)),
+                  trace = FALSE,
+                  scope = list(lower = intercept.model, upper = interaction.model))
+```
+
+```{r}
+### predictor names to check
+predictors <- c("carat",
+                "I(carat^2)",
+                "cut",
+                "color",
+                "clarity",
+                "carat:cut",
+                "carat:color",
+                "carat:clarity")
+
+### function to mark whether predictor is in model
+in_model <- function(model, term) {
+  if (term %in% attr(terms(model), "term.labels")) "X" else ""
+}
+
+### build summary table
+summary_table <- data.frame(
+  Predictor = predictors,
+  `Model 1\nBack/AIC` = sapply(predictors, function(x) in_model(model1, x)),
+  `Model 2\nBack/BIC` = sapply(predictors, function(x) in_model(model2, x)),
+  `Model 3\nFor/AIC`  = sapply(predictors, function(x) in_model(model3, x)),
+  `Model 4\nFor/BIC`  = sapply(predictors, function(x) in_model(model4, x)),
+  `Model 5\nStep/AIC` = sapply(predictors, function(x) in_model(model5, x)),
+  `Model 6\nStep/BIC` = sapply(predictors, function(x) in_model(model6, x))
+)
+
+### add number of predictors row
+num_predictors <- data.frame(
+  Predictor = "# of predictors",
+  `Model 1\nBack/AIC` = length(attr(terms(model1), "term.labels")),
+  `Model 2\nBack/BIC` = length(attr(terms(model2), "term.labels")),
+  `Model 3\nFor/AIC`  = length(attr(terms(model3), "term.labels")),
+  `Model 4\nFor/BIC`  = length(attr(terms(model4), "term.labels")),
+  `Model 5\nStep/AIC` = length(attr(terms(model5), "term.labels")),
+  `Model 6\nStep/BIC` = length(attr(terms(model6), "term.labels"))
+)
+
+summary_table <- rbind(summary_table, num_predictors)
+
+summary_table
+```
+
 # Methodst
 
 @fig-price-vs-diamond
