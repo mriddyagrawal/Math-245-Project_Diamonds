@@ -404,6 +404,7 @@ plotResiduals(model3)
 
 ```{r}
 summary(model3)
+
 ```
 
 ```{r}
@@ -437,13 +438,18 @@ Get the log-likelihood for the models
 
 ```{r}
 data("diamonds")
-diamonds.data <- model.1 <- lm(Petal.Length ~ Petal.Width + Species + Petal.Width:Species,
-                               data = iris.data)
-logLik(model.1)
-
-
+diamonds.data <- first_order_model.transformed <- lm(sqrt(price) ~ carat, data = diamonds)
+logLik(first_order_model.transformed)
 
 #DO THE SAME WITH THE OTHER MODELS 
+
+```
+
+```{r}
+data("diamonds")
+diamonds.data <- model2 <- lm(log(price) ~ carat + I(carat^2) + cut_f + color_f + clarity_f,
+             data = diamonds)
+logLik(model2 )
 
 ```
 
