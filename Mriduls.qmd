@@ -423,20 +423,114 @@ plotResiduals(model5)
 
 ```
 
+Model 4 with log(price) as the response, a quadratic term for carat, and cut, color aandclarity included as categorical predictors. This model provides a strong improvement in the residuals-versus-fitted plot while also treating the categorical variables in a more appropriate way than coding them as numeric.
+
 ```{r}
 m1 <- lm(log(price) ~ carat + cut_f + color_f + clarity_f, data = diamonds)
 
 m2 <- lm(log(price) ~ carat + I(carat^2) + cut_f + color_f + clarity_f, data = diamonds)
 
-m3 <- lm(log(price) ~ carat + I(carat^2) + cut + color + clarity, data = diamonds)
+summary(m4)
+```
 
-m4 <- lm(log(price) ~ carat + I(carat^2) + cut + color + clarity +
-           carat:cut + carat:color + carat:clarity, data = diamonds)
+Get the log-likelihood for the models
 
-m1
-m2
-m3
-m4
+```{r}
+data("diamonds")
+diamonds.data <- model.1 <- lm(Petal.Length ~ Petal.Width + Species + Petal.Width:Species,
+                               data = iris.data)
+logLik(model.1)
+
+
+
+#DO THE SAME WITH THE OTHER MODELS 
+
+```
+
+A negativel og-likelihood is expected, as we are usually taking the ln() of numbers less than 1. A higherlog-likelihood (less negative) means the model fits the data better.
+
+```{r}
+model.1 <- lm(Petal.Length ~ Petal.Width + Species + Petal.Width:Species,
+              data = diamonds)
+
+model.2 <- lm(Petal.Length ~ Petal.Width + Species,
+              data = diamonds)
+
+AIC(model.1)
+
+AIC(model.2)
+
+BIC(model.1)
+
+BIC(model.2)
+```
+
+Model using backward elimination
+
+```{r}
+### library important packages
+library(tidyverse)
+library(MASS)
+
+### read in the data set
+spot.data <- read_csv("spotify.data.csv")
+
+### select variables of interest
+spot.sounds <- spot.data |> dplyr::select(popularity, danceability, energy, loudness:duration_ms)
+
+### intercept only model
+intercept.model <- lm(popularity ~ 1, data = spot.sounds)
+
+### fit the model
+model.first.order <- lm(popularity ~ ., data = spot.sounds)
+
+### backward elimination with AIC
+stepAIC(model.first.order,
+        direction = "backward",
+        trace = FALSE,
+        scope = list(lower = intercept.model, upper = model.first.order))
+
+
+```
+
+```{r}
+### backward elimination with BIC
+stepAIC(model.first.order,
+        direction = "backward",
+        k = log(nrow(spot.sounds)),
+        trace = FALSE,
+        scope = list(lower = intercept.model, upper = model.first.order))
+```
+
+```{r}
+### fit the model based on AIC
+model.backward.aic <- stepAIC(model.first.order,
+                              direction = "backward",
+                              trace = FALSE,
+                              scope = list(lower = intercept.model, upper = model.first.order))
+
+### how many betas
+length(coef(model.backward.aic))
+
+### fit the model based on BIC
+model.backward.bic <- stepAIC(model.first.order,
+                              direction = "backward",
+                              k = log(nrow(spot.sounds)),
+                              trace = FALSE,
+                              scope = list(lower = intercept.model, upper = model.first.order))
+
+### how many betas
+length(coef(model.backward.bic))
+
+### coefficients, p-values, and adjusted R squared for model based on AIC
+round(summary(model.backward.aic)$coefficients, 4)
+
+summary(model.backward.aic)$adj.r.squared
+
+### coefficients, p-values, and adjusted R squared for model based on BIC
+round(summary(model.backward.bic)$coefficients, 4)
+
+summary(model.backward.bic)$adj.r.squared
 ```
 
 # Methodst
