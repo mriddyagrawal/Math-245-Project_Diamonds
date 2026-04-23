@@ -579,52 +579,51 @@ Model using backward elimination
 library(tidyverse)
 library(MASS)
 
-### read in the data set
-spot.data <- read_csv("spotify.data.csv")
+### load the data set
+data("diamonds")
 
 ### select variables of interest
-spot.sounds <- spot.data |> dplyr::select(popularity, danceability, energy, loudness:duration_ms)
+diamonds.data <- diamonds |>
+  dplyr::select(price, carat, cut, color, clarity)
 
 ### intercept only model
-intercept.model <- lm(popularity ~ 1, data = spot.sounds)
+intercept.model <- lm(log(price) ~ 1, data = diamonds.data)
 
 ### fit the model
-model.first.order <- lm(popularity ~ ., data = spot.sounds)
+first_order_model.transformed <- lm(log(price) ~ carat + I(carat^2) + cut + color + clarity,
+                                    data = diamonds.data)
 
 ### backward elimination with AIC
-stepAIC(model.first.order,
+stepAIC(first_order_model.transformed,
         direction = "backward",
         trace = FALSE,
-        scope = list(lower = intercept.model, upper = model.first.order))
+        scope = list(lower = intercept.model, upper = first_order_model.transformed))
 
-
-```
-
-```{r}
 ### backward elimination with BIC
-stepAIC(model.first.order,
+stepAIC(first_order_model.transformed,
         direction = "backward",
-        k = log(nrow(spot.sounds)),
+        k = log(nrow(diamonds.data)),
         trace = FALSE,
-        scope = list(lower = intercept.model, upper = model.first.order))
+        scope = list(lower = intercept.model, upper = first_order_model.transformed))
+
 ```
 
 ```{r}
 ### fit the model based on AIC
-model.backward.aic <- stepAIC(model.first.order,
+model.backward.aic <- stepAIC(first_order_model.transformed ,
                               direction = "backward",
                               trace = FALSE,
-                              scope = list(lower = intercept.model, upper = model.first.order))
+                              scope = list(lower = intercept.model, upper = first_order_model.transformed ))
 
 ### how many betas
 length(coef(model.backward.aic))
 
 ### fit the model based on BIC
-model.backward.bic <- stepAIC(model.first.order,
+model.backward.bic <- stepAIC(first_order_model.transformed ,
                               direction = "backward",
-                              k = log(nrow(spot.sounds)),
+                              k = log(nrow(diamonds.data)),
                               trace = FALSE,
-                              scope = list(lower = intercept.model, upper = model.first.order))
+                              scope = list(lower = intercept.model, upper = first_order_model.transformed ))
 
 ### how many betas
 length(coef(model.backward.bic))
@@ -643,24 +642,26 @@ summary(model.backward.bic)$adj.r.squared
 forward selection
 
 ```{r}
+
+
 library(MASS)
 
-intercept.model <- lm(popularity ~ 1, data = spot.sounds)
-model.first.order <- lm(popularity ~ ., data = spot.sounds)
+intercept.model <- lm(log(price) ~ 1, data = diamonds.data)
+first_order_model.transformed <- lm(log(price) ~ carat + I(carat^2) + cut + color + clarity,
+                                    data = diamonds.data)
 
 ### forward selection with AIC
 stepAIC(intercept.model,
         direction = "forward",
         trace = FALSE,
-        scope = list(lower = intercept.model, upper = model.first.order))
+        scope = list(lower = intercept.model, upper = first_order_model.transformed))
 
 ### forward selection with BIC
 stepAIC(intercept.model,
         direction = "forward",
-        k = log(nrow(spot.sounds)),
+        k = log(nrow(diamonds.data)),
         trace = FALSE,
-        scope = list(lower = intercept.model, upper = model.first.order))
-
+        scope = list(lower = intercept.model, upper = first_order_model.transformed))
 
 
 ```
@@ -672,14 +673,14 @@ stepwise selection
 stepAIC(intercept.model,
         direction = "both",
         trace = FALSE,
-        scope = list(lower = intercept.model, upper = model.first.order))
+        scope = list(lower = intercept.model, upper = first_order_model.transformed))
 
 ### stepwise selection with BIC
 stepAIC(intercept.model,
         direction = "both",
-        k = log(nrow(spot.sounds)),
+        k = log(nrow(diamonds.data)),
         trace = FALSE,
-        scope = list(lower = intercept.model, upper = model.first.order))
+        scope = list(lower = intercept.model, upper = first_order_model.transformed))
 ```
 
 summary them all in a table like (handout 16)
