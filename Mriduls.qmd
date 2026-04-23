@@ -424,20 +424,20 @@ my_model_new <- lm(price_t ~ ., data = diamonds)
 ```{r}
 summary(my_model_new)
 
-model_log <- lm(log(price) ~ carat + cut_f + color_f + clarity_f, data = diamonds)
+model_log <- lm(log(price) ~ carat + cut + color + clarity, data = diamonds)
 plotResiduals(model_log)
 ```
 
 ```{r}
-model2 <- lm(log(price) ~ carat + I(carat^2) + cut_f + color_f + clarity_f,
+model2 <- lm(log(price) ~ carat + I(carat^2) + cut + color + clarity,
              data = diamonds)
 
 plotResiduals(model2)
 ```
 
 ```{r}
-model3 <- lm(log(price) ~ carat + I(carat^2) + cut_f + color_f + clarity_f +
-               carat:cut_f + carat:color_f + carat:clarity_f,
+model3 <- lm(log(price) ~ carat + I(carat^2) + cut + color + clarity +
+               carat:cut + carat:color + carat:clarity,
              data = diamonds)
 
 plotResiduals(model3)
@@ -468,9 +468,9 @@ plotResiduals(model5)
 Model 4 with log(price) as the response, a quadratic term for carat, and cut, color aandclarity included as categorical predictors. This model provides a strong improvement in the residuals-versus-fitted plot while also treating the categorical variables in a more appropriate way than coding them as numeric.
 
 ```{r}
-m1 <- lm(log(price) ~ carat + cut_f + color_f + clarity_f, data = diamonds)
+m1 <- lm(log(price) ~ carat + cut + color + clarity, data = diamonds)
 
-m2 <- lm(log(price) ~ carat + I(carat^2) + cut_f + color_f + clarity_f, data = diamonds)
+m2 <- lm(log(price) ~ carat + I(carat^2) + cut + color + clarity, data = diamonds)
 
 summary(m4)
 ```
@@ -482,15 +482,35 @@ data("diamonds")
 diamonds.data <- first_order_model.transformed <- lm(sqrt(price) ~ carat, data = diamonds)
 logLik(first_order_model.transformed)
 
-#DO THE SAME WITH THE OTHER MODELS 
 
-```
-
-```{r}
 data("diamonds")
-diamonds.data <- model2 <- lm(log(price) ~ carat + I(carat^2) + cut_f + color_f + clarity_f,
+diamonds.data <- model2 <- lm(log(price) ~ carat + I(carat^2) + cut + color + clarity,
              data = diamonds)
 logLik(model2 )
+
+
+data("diamonds")
+diamonds.data <- model3 <- lm(log(price) ~ carat + I(carat^2) + cut + color + clarity+
+               carat:cut + carat:color + carat:clarity,
+             data = diamonds)
+logLik(model3 )
+
+
+
+data("diamonds")
+diamonds.data <- model4 <- lm(log(price) ~ carat + I(carat^2) + cut + color + clarity,
+             data = diamonds)
+
+logLik(model4 )
+
+data("diamonds")
+diamonds.data <- model5 <- lm(log(price) ~ carat + I(carat^2) + cut + color + clarity +
+               carat:cut + carat:color + carat:clarity,
+             data = diamonds)
+logLik(model5 )
+
+
+#DO THE SAME WITH THE OTHER MODELS 
 
 ```
 
@@ -507,19 +527,49 @@ ggpairs(diamonds, columns = c(2:5))
 A negativel og-likelihood is expected, as we are usually taking the ln() of numbers less than 1. A higherlog-likelihood (less negative) means the model fits the data better.
 
 ```{r}
-model.1 <- lm(Petal.Length ~ Petal.Width + Species + Petal.Width:Species,
-              data = diamonds)
 
-model.2 <- lm(Petal.Length ~ Petal.Width + Species,
-              data = diamonds)
 
-AIC(model.1)
+data("diamonds")
+diamonds.data <- first_order_model.transformed <- lm(sqrt(price) ~ carat, data = diamonds)
 
-AIC(model.2)
 
-BIC(model.1)
+data("diamonds")
+diamonds.data <- model2 <- lm(log(price) ~ carat + I(carat^2) + cut + color + clarity,
+             data = diamonds)
 
-BIC(model.2)
+
+data("diamonds")
+diamonds.data <- model3 <- lm(log(price) ~ carat + I(carat^2) + cut + color + clarity+
+               carat:cut + carat:color + carat:clarity,
+             data = diamonds)
+
+
+
+data("diamonds")
+diamonds.data <- model4 <- lm(log(price) ~ carat + I(carat^2) + cut + color + clarity,
+             data = diamonds)
+
+
+data("diamonds")
+diamonds.data <- model5 <- lm(log(price) ~ carat + I(carat^2) + cut + color + clarity +
+               carat:cut + carat:color + carat:clarity,
+             data = diamonds)
+
+
+AIC(first_order_model.transformed )
+AIC(model2)
+AIC(model3)
+AIC(model4)
+AIC(model5)
+
+
+BIC(first_order_model.transformed )
+BIC(model2)
+BIC(model3)
+BIC(model4)
+BIC(model5)
+
+
 ```
 
 Model using backward elimination
