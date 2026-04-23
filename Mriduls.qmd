@@ -122,6 +122,47 @@ diamonds <- read_csv("diamonds.csv")
 diamonds |> glimpse()
 ```
 
+```{r}
+library(tidyverse)
+
+diamonds <- diamonds |>
+  mutate(
+    cut = case_when(
+      cut == "Fair"      ~ "1-Fair",
+      cut == "Good"      ~ "2-Good",
+      cut == "Very Good" ~ "3-Very Good",
+      cut == "Premium"   ~ "4-Premium",
+      cut == "Ideal"     ~ "5-Ideal"
+    ),
+    color = case_when(
+      color == "J" ~ "1-J",
+      color == "I" ~ "2-I",
+      color == "H" ~ "3-H",
+      color == "G" ~ "4-G",
+      color == "F" ~ "5-F",
+      color == "E" ~ "6-E",
+      color == "D" ~ "7-D"
+    ),
+    clarity = case_when(
+      clarity == "I1"   ~ "1-I1",
+      clarity == "SI2"  ~ "2-SI2",
+      clarity == "SI1"  ~ "3-SI1",
+      clarity == "VS2"  ~ "4-VS2",
+      clarity == "VS1"  ~ "5-VS1",
+      clarity == "VVS2" ~ "6-VVS2",
+      clarity == "VVS1" ~ "7-VVS1",
+      clarity == "IF"   ~ "8-IF"
+    )
+  )
+
+diamonds <- diamonds |>
+  mutate(
+    cut     = factor(cut,     ordered = TRUE),
+    color   = factor(color,   ordered = TRUE),
+    clarity = factor(clarity, ordered = TRUE)
+  )
+```
+
 ## Three visualizations of Price vs. Carat
 
 This figure displays the relationship between carat weight and price under three different scales. The raw price vs. carat plot (top left) shows a clear positive association, larger diamonds are more expensive, but two problems are immediately apparent. First, the relationship is nonlinear, curving upward at higher carat values rather than following a straight line. Second, the vertical spread of prices increases dramatically as carat increases, indicating a non-constant variance. Both of these patterns would violate the assumptions of ordinary least squares regression if we modeled price on the original scale.
