@@ -1,0 +1,782 @@
+---
+title: "Diamonds"  
+author: "Prera & Agrawal"     
+format:
+  pdf:
+    toc: true
+    number-sections: true
+    pdf-engine: lualatex
+    keep-tex: true
+  html:
+    toc: true
+    theme: cosmo
+    code-fold: true
+  docx:
+    
+    reference-doc: custom.docx
+code-line-numbers: false
+colorlinks: true
+urlcolor: purple
+citecolor: purple
+execute:      
+  message: false                                
+  warning: false
+  include: false                         
+  freeze: auto   
+fontsize: 11pt                                  
+highlight-style: tango                          
+toc-title: Contents    
+toccolor: blue
+toc-depth: 3                                    
+number-depth: 3    
+fig-align: center
+fig-cap-location: bottom
+cite-method: citeproc                           
+# bibliography: references.bib                    
+# csl: apa.csl                                    
+geometry:       
+  - top=0.75in                                  
+  - left=0.75in                                 
+  - bottom=0.75in                               
+  - right=0.75in                                
+header-includes:
+  - \usepackage{hyperref}
+  - |
+    \newenvironment{customabstract}{
+      \begin{center}{\bfseries Abstract}\par\vspace{0.5em}
+      \begin{minipage}{0.8\linewidth}
+    }{
+      \end{minipage}\end{center}
+    }
+editor: 
+  markdown: 
+    wrap: none
+---
+
+\newpage
+
+\begin{customabstract}
+This is my abstract
+\end{customabstract}
+
+\newpage
+
+# Introduction
+
+The diamond market has always been kind of controversial, especially for something considered “luxury.” Most people hear about the “Four Cs”, which are: carat, cut, color, and clarity. It is assume those are what determine price. But in reality, it’s not that simple. A lot of people argue that prices are influenced by things like branding and controlled supply as they are by the actual physical features of the diamond. Because of that, figuring out what really drives diamond prices is both interesting from a data perspective and actually useful if you’re trying to buy or sell one.
+
+For this analysis, we used a dataset from Kaggle with about 53,940 diamonds sold in the U.S. The dataset has 10 variables that describe different characteristics of each diamond. The main thing we’re trying to predict is price (in U.S. dollars), which is a continuous variable. The predictors we used are:
+
+Quantitative predictors (continous):
+
+carat: the weight of the diamond in carats. Carat weight is widely regarded as the single most important factor in diamond pricing, as larger diamonds are rarer and thus more valuable.
+
+depth: the total depth percentage, calculated as $2z/(x+y)×100$. This measures how deep a diamond is relative to its width, which affects how light moves through the stone.
+
+table: the width of the top facet of the diamond, expressed as a percentage of the overall width. A well-proportioned table allows light to enter and reflect back efficiently.
+
+x: the length of the diamond in millimeters.
+
+y: the width of the diamond in millimeters.
+
+z: the depth (height) of the diamond in millimeters.
+
+Qualitative predictors (ordinal):
+
+cut: the quality of the diamond's cut, graded as Fair, Good, Very Good, Premium, or Ideal. Cut quality refers to how well the diamond's facets interact with light and is determined by proportions, symmetry, and polish.
+
+color: the color grade of the diamond, ranging from D (colorless, most desirable) to J (near-colorless, least desirable). In the traditional grading scale, less color generally corresponds to a higher value.
+
+clarity: the clarity grade, which measures the presence of internal inclusions and surface blemishes. The grades in this dataset range from I1 (worst, inclusions visible to the naked eye) through SI2, SI1, VS2, VS1, VVS2, VVS1, to IF (best, internally flawless).
+
+We also created a new variable called volume (x × y × z) to better capture the overall size of each diamond in one number.
+
+With almost 54,000 observations, this dataset is definitely large enough to run a solid multiple linear regression. That said, it’s not a perfect random sample, it comes from an online retailer’s inventory, so it’s more of a convenience sample. Because of that, the results are probably most relevant to diamonds being sold in the U.S. retail market, and we wouldn’t try to generalize too far beyond that.
+
+This kind of analysis can actually be useful for a few different groups. Buyers can get a better sense of what they’re paying for and spot diamonds that might be overpriced. Jewelers and appraisers could use a model like this as a pricing reference. And from a bigger-picture perspective, it helps show whether diamond prices are really based on measurable features or if other factors, like branding or perceived rarity, play a bigger role.
+
+The main questions we trying to answer are:
+
+1.  Do physical features like carat, cut, color, and clarity (4C's) actually do a good job of predicting price, or is the relationship weaker than expected?
+
+2.  Which variables are the most useful predictors of diamond price? One might expect that higher color grades (closer to D) and higher clarity grades (closer to IF) command substantial premiums, but this may not hold after controlling for carat weight.
+
+3.  Are there meaningful interactions between predictors? For example, does the price premium associated with better cut quality depend on the size of the diamond?
+
+# Exploratory Data Analysis
+
+Before building any models, we first explored the dataset to understand its structure, identify potential issues, and develop intuition about the relationships between variables. The dataset contains 53,940 observations across 10 variables, plus our derived volume variable.
+
+```{r}
+### important packages
+library(tidyverse)
+library(patchwork)
+library(dplyr)
+```
+
+```{r}
+diamonds <- read_csv("diamonds.csv")
+```
+
+```{r}
+diamonds |> glimpse()
+```
+
+```{r}
+library(tidyverse)
+
+diamonds <- diamonds |>
+  mutate(
+    cut = case_when(
+      cut == "Fair"      ~ "1-Fair",
+      cut == "Good"      ~ "2-Good",
+      cut == "Very Good" ~ "3-Very Good",
+      cut == "Premium"   ~ "4-Premium",
+      cut == "Ideal"     ~ "5-Ideal"
+    ),
+    color = case_when(
+      color == "J" ~ "1-J",
+      color == "I" ~ "2-I",
+      color == "H" ~ "3-H",
+      color == "G" ~ "4-G",
+      color == "F" ~ "5-F",
+      color == "E" ~ "6-E",
+      color == "D" ~ "7-D"
+    ),
+    clarity = case_when(
+      clarity == "I1"   ~ "1-I1",
+      clarity == "SI2"  ~ "2-SI2",
+      clarity == "SI1"  ~ "3-SI1",
+      clarity == "VS2"  ~ "4-VS2",
+      clarity == "VS1"  ~ "5-VS1",
+      clarity == "VVS2" ~ "6-VVS2",
+      clarity == "VVS1" ~ "7-VVS1",
+      clarity == "IF"   ~ "8-IF"
+    )
+  )
+
+diamonds <- diamonds |>
+  mutate(
+    cut     = factor(as.character(cut)),
+    color   = factor(as.character(color)),
+    clarity = factor(as.character(clarity))
+  )
+
+print(dim(diamonds))
+
+diamonds <- diamonds[diamonds$x != 0 & diamonds$y != 0 & diamonds$z != 0, ]
+
+print(dim(diamonds))
+```
+
+### 
+
+## Looking at the sizes
+
+```{r}
+#| include: true
+#| echo: false
+#| fig-width: 9
+#| fig-height: 15
+#| fig-align: "center"
+#| fig-pos: "H"
+#| fig-cap: "Size histograms (99.8 percentile values for the first 3 and 99.5 percentile for the other 2). Note that the x-axis does not start from 0."
+#| label: fig-sizes
+
+g1 <- diamonds |>
+  filter(x > quantile(x, 0.998)) |>
+  ggplot(aes(x = x)) +
+  geom_histogram(fill = "lightblue", color = "black", bins = 100) +
+  theme_bw() +
+  labs(
+    title = "Histogram of X",
+    x = "X (mm)",
+    y = "Count"
+  )
+
+g2 <- diamonds |>
+  filter(y > quantile(y, 0.998)) |>
+  ggplot(aes(x = y)) +
+  geom_histogram(fill = "lightblue", color = "black", bins = 100) +
+  theme_bw() +
+  labs(
+    title = "Histogram of Y",
+    x = "Y (mm)",
+    y = "Count"
+  )
+
+g3 <- diamonds |>
+  filter(z > quantile(z, 0.998)) |>
+  ggplot(aes(x = z)) +
+  geom_histogram(fill = "lightblue", color = "black", bins = 100) +
+  theme_bw() +
+  labs(
+    title = "Histogram of Z",
+    x = "Z (mm)",
+    y = "Count"
+  )
+
+g4 <- diamonds |>
+  filter(depth > quantile(depth, 0.995)) |>
+  ggplot(aes(x = depth)) +
+  geom_histogram(fill = "lightblue", color = "black", bins = 100) +
+  theme_bw() +
+  labs(
+    title = "Histogram of Depth",
+    x = "Depth (%)",
+    y = "Count"
+  )
+
+g5 <- diamonds |>
+  filter(table > quantile(table, 0.995)) |>
+  ggplot(aes(x = table)) +
+  geom_histogram(fill = "lightblue", color = "black", bins = 100) +
+  theme_bw() +
+  labs(
+    title = "Histogram of Table",
+    x = "Table (%)",
+    y = "Count"
+  )
+
+g1/g2/g3/g4/g5
+
+```
+
+We can see here that some diamonds are clearly mistaken. Looking at the $x$ graph, we see that the data is fairly distributed even at the tail (since we are only checking diamonds in the 99.9 percentile and above), so, we don't see any outliers. However, looking at $y$ and $z$, there are sharp cuts after 11 mm and 9 mm, respectively. Let us take one particular case: Row 24068, $y = 58.9$, then the other properties of the diamond are $x = 8.09$, $z = 8.06$, price is about $12k$, it is a $2$ carat diamond, etc. Everything seems okay except for the $y$ value, especially when noted that it is 2 carats. Thus, this is a faulty row, and should be dropped. Similarly, the other 2 rows, one from y and one from z are also faulty and should be dropped. So, I am dropping them.
+
+```{r}
+diamonds <- diamonds[diamonds$y < 11 & diamonds$z < 9, ]
+```
+
+## Three visualizations of Price vs. Carat
+
+This figure displays the relationship between carat weight and price under three different scales. The raw price vs. carat plot (top left) shows a clear positive association, larger diamonds are more expensive, but two problems are immediately apparent. First, the relationship is nonlinear, curving upward at higher carat values rather than following a straight line. Second, the vertical spread of prices increases dramatically as carat increases, indicating a non-constant variance. Both of these patterns would violate the assumptions of ordinary least squares regression if we modeled price on the original scale.
+
+The log-transformed price (bottom left) addresses both issues. The relationship with carat becomes approximately linear, and the variance appears much more stable across the full range of carat values. The square root transformation (right) also improves linearity relative to the raw scale, though the variance stabilization is not as pronounced as with the log transformation. Based on this visual comparison, a log transformation of price appears to be the most promising approach, and we will revisit this formally when assessing model residuals in the methods section.
+
+```{r}
+#| include: true
+#| echo: false
+#| fig-width: 9
+#| fig-height: 5
+#| fig-align: "center"
+#| fig-pos: "H"
+#| fig-cap: "Price vs Diamonds"
+#| label: fig-price-vs-diamond
+
+diamonds_sampled <- diamonds |>
+  slice_sample(n = 20000)
+
+diamonds_sampled <- diamonds_sampled |>
+  mutate(volume = x * y * z)
+
+g1 <- diamonds |> 
+  ggplot(aes(x = carat, y = price )) +
+  geom_point(size = 0.0001)+
+  coord_cartesian(xlim = c(0, 3.5)) +
+  theme_bw()
+
+g2 <- diamonds |>
+  ggplot(aes(x =carat, y = sqrt(price))) +
+  geom_point(size = 0.0001) +
+  coord_cartesian(xlim = c(0, 3.5)) +
+  theme_bw()
+
+g3 <- diamonds |>
+  ggplot(aes(x =carat, y = log(price))) +
+  geom_point(size = 0.0001) +
+  coord_cartesian(xlim = c(0, 3.5)) +
+  theme_bw()
+    
+(g1 / g3) | g2
+```
+
+```{r}
+ggplot(diamonds_sampled, aes(log(carat), log(price))) +
+  geom_point(alpha = 0.1) +
+  geom_smooth(method = "lm", color = "red") +
+  geom_smooth(method = "loess", color = "blue")
+```
+
+*Mridul's:*
+
+Firstly, we tried to understand the relationship of Diamond prices with the predictors we have in the dataset. The first obvious predictor to consider was carats, as popularized by advertisements on the Fifth Avenue by De Beers, "Bigger is Better." (Cite the book Many Meanings of Diamonds, Susan Falls) We guessed initially that it would not be a linear relationship, thus, we immediately applied a logarithmic transformation. To our dismay, the graph just looked reflected and after an hour of other forms of data exploration, we tried applying a square root transformation, and the graph became immediately linear.
+
+*Ary's:*
+
+## Price vs. physycal size measurements
+
+These four scatterplots examine the relationship between price and the physical size measurements of each diamond. The price vs. volume plot (top left) shows a strong positive relationship, consistent with the expectation that physically larger diamonds have higher prices. However, still see that same fanning pattern from the carat plots — as volume gets bigger, the spread in prices increases too.
+
+Among the individual dimension plots, x (length, top right) exhibits the cleanest positive association with price. The y (width, bottom left) and z (depth, bottom right) plots show similar positive trends but also reveal extreme outliers, individual diamonds with y or z values far exceeding what is physically plausible at the carat weights observed in this dataset. For example, several points appear with y values above 30 mm and z values above 30 mm, which would represent stones far larger than anything in the dataset's carat range. These are almost certainly data entry errors. Additionally, some diamonds have x, y, or z values equal to zero, implying a stone with no physical dimension. These problematic observations will need to be removed before modeling.
+
+```{r}
+#| include: true
+#| echo: false
+#| fig-width: 9
+#| fig-height: 5
+#| fig-align: "center"
+#| fig-pos: "H"
+#| fig-cap: "Price vs volume"
+#| label: fig-price-vs-volume
+
+g1 <- diamonds_sampled |>
+  ggplot(aes(x = volume, y = sqrt(price))) +
+  geom_point(size = 0.0001) +
+  coord_cartesian(xlim = c(0, 1000)) +
+  theme_bw()
+
+g2 <- diamonds_sampled |>
+  ggplot(aes(x = x^3, y = sqrt(price))) +
+  geom_point(size = 0.0001) +
+  coord_cartesian(xlim = c(0, 1000)) +
+  theme_bw()
+
+g3 <- diamonds_sampled |>
+  ggplot(aes(x = y^3, y = sqrt(price))) +
+  geom_point(size = 0.0001) +
+  coord_cartesian(xlim = c(0, 1000)) +
+  theme_bw()
+
+g4 <- diamonds_sampled |>
+  ggplot(aes(x = z^3, y = sqrt(price))) +
+  geom_point(size = 0.0001) +
+  coord_cartesian(xlim = c(0, 1000)) +
+  theme_bw()
+
+(g1 + g2) / (g3 + g4)
+```
+
+*Mridul's:*
+
+Maybe talk about how the slopes compare to each other. The first volume graph is obvious, but the difference between the slopes of the other 3 seems to be quite different. Which means with growing depth, the diamond price increases faster as compared to the increase in length or width.
+
+Apart from that, it is pretty fascinating that the price is just correlated exponentially with the volume, and thus also exponentially with the rest of the items.
+
+If we were to strictly stick to a linear regression, we should not be caring about x, y, and z, we may lose some information but we need to use volume because we cannot cube the x, y, and z.
+
+*Ary's:*
+
+## Carat Weight and the Square Root of price
+
+This scatterplot shows the relationship between carat weight and the square root of price, with points colored by cut quality and separate regression lines for each cut category. Across all five cut levels, there is a clear positive relationship between carat and price, which makes sense, as carat weight increases, price also increases. This pattern holds regardless of the cut, reinforcing the idea that size is a major driver of diamond pricing. At the same time, the regression lines for each cut level are fairly close to one another, suggesting that cut quality has a smaller effect on price than you might expect, especially when compared to the strong influence of carat weight.
+
+One interesting detail is that the regression line for Fair cut diamonds has the steepest slope. This is a bit unexpected, since you would normally think higher-quality cuts would be associated with higher prices. However, this can be explained by how diamonds are cut in practice. Fair cut diamonds are often shaped in a way that preserves more of the original rough stone, even if that means sacrificing brilliance or overall appearance. Because of this, they tend to retain more weight. At larger carat sizes, that extra weight becomes more important, since the market places a high premium on size, which can drive prices up more quickly for these diamonds.
+
+This pattern suggests that the effect of cut quality on price is not constant, but instead may depend on the size of the diamond. In other words, there could be an interaction between carat and cut, where the impact of one variable changes depending on the level of the other. Because of this, it makes sense to include interaction terms between carat and cut in the regression models moving forward.
+
+```{r}
+#| include: true
+#| echo: false
+#| fig-width: 9
+#| fig-height: 5
+#| fig-align: "center"
+#| fig-pos: "H"
+#| fig-cap: "Price vs Diamonds"
+#| label: fig-price-vs-diamond-vs-cut
+
+g1 <- diamonds_sampled |> 
+  ggplot(aes(x = carat, y = price, color = cut)) +
+  geom_point(size = 0.0001)+
+  theme_bw()
+
+g2 <- diamonds_sampled |>
+  ggplot(aes(x =carat, y = log(price), color = cut)) +
+  geom_point(size = 0.0001) +
+  theme_bw()
+
+g3 <- diamonds_sampled |>
+  ggplot(aes(x = carat, y = sqrt(price), color = cut)) +
+  geom_point(size = 0.001) +
+  geom_smooth(method = "lm", se = FALSE) +
+  coord_cartesian(ylim = c(20, 130), xlim = c(0, 3.5)) +
+  theme_bw() +
+  labs(title = "Linear Regression on Price, Carats and Cut of Diamonds.",
+  x = "Price",
+  y = "Carat")
+    
+g3
+```
+
+*Ary's:*
+
+## Histogram of Diamond Prices
+
+The histogram of diamond prices reveals a strongly right-skewed distribution. The vast majority of diamonds are priced below \$5,000, with a heavy concentration in the \$500 to \$1,500 range. Beyond that, the frequency drops off steeply, and a long right tail extends past \$15,000. The mean price is higher than the median, which is a direct consequence of this skew. This distributional shape is important because it suggests that the raw price variable may violate the regression assumptions of normally distributed residuals and constant variance. A transformation of the response variable, such as a log or square root transformation, will likely be necessary to address this, and we investigate that possibility in the following figure.
+
+```{r}
+#| include: true
+#| echo: false
+#| fig-width: 9
+#| fig-height: 4
+#| fig-align: "center"
+#| fig-pos: "H"
+#| fig-cap: "Histogram of Diamond Prices."
+#| label: fig-prices-hist
+
+diamonds |>
+  ggplot(aes(x = price)) +
+  geom_histogram(fill = "lightblue", color = "black", bins = 150) +
+  theme_bw() +
+  labs(
+    title = "Histogram of Diamond Prices",
+    x = "Price",
+    y = "Count"
+  )
+
+
+```
+
+```{r}
+#| include: true
+#| echo: false
+#| fig-width: 9
+#| fig-height: 4
+#| fig-align: "center"
+#| fig-pos: "H"
+#| fig-cap: "Histogram of Diamond Carats."
+#| label: fig-carats-hist
+diamonds |>
+  ggplot(aes(x = carat)) +
+  geom_histogram(fill = "lightblue", color = "black", bins = 150) +
+  theme_bw() +
+  labs(
+    title = "Histogram of Diamond Carat",
+    x = "Price",
+    y = "Count"
+  )
+```
+
+*Ary's:*
+
+## Depth vs Price scatterplot
+
+Unlike carat and the physical dimension variables, depth percentage shows very little linear association with price. The scatterplot reveals that the vast majority of diamonds cluster tightly between a depth of approximately 58% and 65%, and within that narrow band, prices span the entire range from under \$1,000 to over \$15,000. There is no discernible upward or downward trend. This indicates that depth percentage on its own is a poor predictor of diamond price. However, depth may still contribute meaningfully within a multiple regression model that controls for carat and other variables, or when combined with other predictors through interaction terms. We will investigate this in the methods section.
+
+```{r}
+#| include: true
+#| echo: false
+#| fig-width: 9
+#| fig-height: 4
+#| fig-align: "center"
+#| fig-pos: "H"
+#| fig-cap: "Histogram of Diamond depth and price"
+#| label: fig-prices-depth-scatt
+
+diamonds |>
+    ggplot(aes(x = depth, y = price )) +
+    geom_point(size = 0.0001, color= "pink") +
+    theme_bw() +
+    labs(
+    title = "Histogram of Diamond Prices vs depth",
+    x = "depth",
+    y = "price"
+     )
+```
+
+```{r}
+# diamonds$cut_f <- as.factor(diamonds$cut) 
+
+# diamonds$color_f <- as.factor(diamonds$color)
+
+# diamonds$clarity_f <- as.factor(diamonds$clarity)
+
+```
+
+```{r}
+first_order_model <- lm(price ~ cut + color + clarity + carat, data = diamonds)
+```
+
+```{r}
+summary(first_order_model)
+```
+
+Pretty good, now, lets look at the qq plot and the constant variance requirements. We have seen before that we might need some transformation by seeing the relationships with the other variables, and we should focus on it.
+
+```{r}
+source("https://cipolli.com/students/code/plotResiduals.R")
+plotResiduals(first_order_model)
+```
+
+Now, this is clearly problematic. Let's try the transformation now.
+
+```{r}
+first_order_model.transformed <- lm(sqrt(price) ~ carat, data = diamonds)
+
+```
+
+```{r}
+summary(first_order_model.transformed)
+```
+
+```{r}
+plotResiduals(first_order_model.transformed)
+```
+
+```{r}
+library(MASS)
+
+bc <- boxcox(first_order_model)  # pass your existing lm object
+lambda <- bc$x[which.max(bc$y)]
+
+# Apply transformation to your response variable
+diamonds$price_t <- ((diamonds$price)^lambda - 1) / lambda
+
+# Refit the model with transformed response
+my_model_new <- lm(price_t ~ ., data = diamonds)
+
+```
+
+```{r}
+summary(my_model_new)
+
+model_log <- lm(log(price) ~ carat + cut + color + clarity, data = diamonds)
+plotResiduals(model_log)
+```
+
+```{r}
+model2 <- lm(log(price) ~ carat + I(carat^2) + cut + color + clarity,
+             data = diamonds)
+
+plotResiduals(model2)
+```
+
+## Model 3, best till now
+
+```{r}
+model3 <- lm(log(price) ~ log(carat) + cut + color + clarity +
+               log(carat):cut + log(carat):color + log(carat):clarity + color*clarity,
+             data = diamonds)
+
+plotResiduals(model3)
+```
+
+```{r}
+#removing the ones with high residuals
+
+diamonds_without_bad_resid <- diamonds |>
+  mutate(resid = residuals(model3)) |>
+  filter(abs(resid) < 1)   # keep only rows within ±1 on the log scale
+```
+
+```{r}
+library(splines)
+model3 <- lm(log(price) ~ log(carat) + cut + color + clarity + log(carat):cut + log(carat):color + log(carat):clarity,
+             data = diamonds_without_bad_resid)
+
+plotResiduals(model3)
+```
+
+here, we tried using carat + carat^2.\ However,\ with\ some\ math,\ we\ realised\ that\ just\ using\ log(Carat)\ is\ equivalent\ to\ using\ carat\ +\ carat\ \^\ 2.\ This\ is\ because\ bigger\ diamonds\ (higher\ carats)\ are\ exponentially\ more\ rare\ and\ thus\ highly\ more\ valuable.^
+
+```{r}
+# Predict on new data
+new_diamond <- tibble(
+  carat = 2,
+  cut = "4-Premium",
+  color = "3-H",
+  clarity = "2-SI2"
+)
+
+predict(model3, newdata = new_diamond)
+```
+
+```{r}
+plot(model3)
+```
+
+```{r}
+summary(model3)
+```
+
+```{r}
+high_resid_model3 <- diamonds_without_bad_resid |>
+  mutate(
+    pred = predict(model3),
+    resid = log(price) - pred
+  ) |>
+  arrange(desc(abs(resid))) |>
+  head(20)
+```
+
+```{r}
+# How rare are these combinations?
+diamonds |>
+  filter(carat >= 3) |>
+  count(clarity)
+
+# What's the actual price curve for I1 as carat grows?
+diamonds |>
+  filter(clarity == "1-I1") |>
+  ggplot(aes(carat, price)) + geom_point()
+```
+
+```{r}
+#| include: true
+#| echo: false
+#| fig-width: 9
+#| fig-height: 10
+#| fig-align: "center"
+#| fig-pos: "H"
+#| fig-cap: "Could be a pretty important thing. We can understand from here, where our model is getting residuals from, especially comparing to the carats. So, our hypotheses was that psychological pricing is at play in the diamond market, that a 1 carat diamond is much above the price it should be if the diamond market followed a clearer trend. in our case, we can see that the residuals are positive at the theresholds, the places where carat = 1, carat = 2, etc. this means that the model is predicting a lower price that the actual price. However, in the other places, the residual is negative, meaning the model is predicting a higher price. this means that the model wants it to be a linear regression and predicts accordingly, but the data itself is skewed. maybe a piecewise model could be strong as well here."
+#| label: fig-sizes
+diamonds_with_resid <- diamonds_without_bad_resid |>
+  mutate(
+    resid = residuals(model3),  # or whatever your final model is
+    carat_bin = cut(carat,
+                    breaks = c(0, 0.25, 0.5, 0.7, 0.9, 0.99, 1.1, 1.2, 1.5, 2, 3, 5, 10),
+                    include.lowest = TRUE)
+  )
+
+g1 <- ggplot(diamonds_with_resid, aes(carat_bin, resid)) +
+  geom_boxplot() +
+  geom_hline(yintercept = 0, color = "red", linetype = "dashed") +
+  labs(x = "Carat bin", y = "Residual (log scale)") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+g2 <- diamonds_without_bad_resid |>
+  mutate(resid = residuals(model3)) |>
+  ggplot(aes(carat, resid)) +
+  geom_point(alpha = 0.1) +
+  geom_smooth(se = FALSE, color = "red") +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  scale_x_continuous(breaks = c(0.5, 1, 1.5, 2, 3, 5)) +
+  labs(x = "Carat", y = "Residual (log scale)")
+
+g1/g2
+```
+
+```{r}
+model4 <- lm(log(price) ~ carat + I(carat^2) + cut + color + clarity,
+             data = diamonds)
+
+plotResiduals(model4)
+
+```
+
+```{r}
+model5 <- lm(log(price) ~ carat + I(carat^2) + cut + color + clarity +
+               carat:cut + carat:color + carat:clarity,
+             data = diamonds)
+
+plotResiduals(model5)
+
+```
+
+Model 4 with log(price) as the response, a quadratic term for carat, and cut, color aandclarity included as categorical predictors. This model provides a strong improvement in the residuals-versus-fitted plot while also treating the categorical variables in a more appropriate way than coding them as numeric.
+
+```{r}
+m1 <- lm(log(price) ~ carat + cut + color + clarity, data = diamonds)
+
+m2 <- lm(log(price) ~ carat + I(carat^2) + cut + color + clarity, data = diamonds)
+
+summary(m4)
+```
+
+Get the log-likelihood for the models
+
+```{r}
+#data("diamonds")
+diamonds.data <- model.1 <- lm(Petal.Length ~ Petal.Width + Species + Petal.Width:Species,
+                               data = iris.data)
+logLik(model.1)
+
+
+
+#DO THE SAME WITH THE OTHER MODELS 
+
+```
+
+A negativel og-likelihood is expected, as we are usually taking the ln() of numbers less than 1. A higherlog-likelihood (less negative) means the model fits the data better.
+
+```{r}
+model.1 <- lm(Petal.Length ~ Petal.Width + Species + Petal.Width:Species,
+              data = diamonds)
+
+model.2 <- lm(Petal.Length ~ Petal.Width + Species,
+              data = diamonds)
+
+AIC(model.1)
+
+AIC(model.2)
+
+BIC(model.1)
+
+BIC(model.2)
+```
+
+Model using backward elimination
+
+```{r}
+### library important packages
+library(tidyverse)
+library(MASS)
+
+### read in the data set
+spot.data <- read_csv("spotify.data.csv")
+
+### select variables of interest
+spot.sounds <- spot.data |> dplyr::select(popularity, danceability, energy, loudness:duration_ms)
+
+### intercept only model
+intercept.model <- lm(popularity ~ 1, data = spot.sounds)
+
+### fit the model
+model.first.order <- lm(popularity ~ ., data = spot.sounds)
+
+### backward elimination with AIC
+stepAIC(model.first.order,
+        direction = "backward",
+        trace = FALSE,
+        scope = list(lower = intercept.model, upper = model.first.order))
+
+
+```
+
+```{r}
+### backward elimination with BIC
+stepAIC(model.first.order,
+        direction = "backward",
+        k = log(nrow(spot.sounds)),
+        trace = FALSE,
+        scope = list(lower = intercept.model, upper = model.first.order))
+```
+
+```{r}
+### fit the model based on AIC
+model.backward.aic <- stepAIC(model.first.order,
+                              direction = "backward",
+                              trace = FALSE,
+                              scope = list(lower = intercept.model, upper = model.first.order))
+
+### how many betas
+length(coef(model.backward.aic))
+
+### fit the model based on BIC
+model.backward.bic <- stepAIC(model.first.order,
+                              direction = "backward",
+                              k = log(nrow(spot.sounds)),
+                              trace = FALSE,
+                              scope = list(lower = intercept.model, upper = model.first.order))
+
+### how many betas
+length(coef(model.backward.bic))
+
+### coefficients, p-values, and adjusted R squared for model based on AIC
+round(summary(model.backward.aic)$coefficients, 4)
+
+summary(model.backward.aic)$adj.r.squared
+
+### coefficients, p-values, and adjusted R squared for model based on BIC
+round(summary(model.backward.bic)$coefficients, 4)
+
+summary(model.backward.bic)$adj.r.squared
+```
+
+# Methodst
+
+@fig-price-vs-diamond
+
+# Conclusion
+
+# References
