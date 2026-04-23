@@ -410,20 +410,11 @@ plotResiduals(model5)
 
 ```
 
+Model 4 with log(price) as the response, a quadratic term for carat, and cut, color aandclarity included as categorical predictors. This model provides a strong improvement in the residuals-versus-fitted plot while also treating the categorical variables in a more appropriate way than coding them as numeric.
+
 ```{r}
-m1 <- lm(log(price) ~ carat + cut_num + color_num + clarity_num, data = diamonds)
 
-m2 <- lm(log(price) ~ carat + I(carat^2) + cut_num + color_num + clarity_num, data = diamonds)
-
-m3 <- lm(log(price) ~ carat + I(carat^2) + cut + color + clarity, data = diamonds)
-
-m4 <- lm(log(price) ~ carat + I(carat^2) + cut + color + clarity +
-           carat:cut + carat:color + carat:clarity, data = diamonds)
-
-m1
-m2
-m3
-m4
+summary(m4)
 ```
 
 # Methodst
