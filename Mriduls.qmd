@@ -683,7 +683,59 @@ stepAIC(intercept.model,
         scope = list(lower = intercept.model, upper = first_order_model.transformed))
 ```
 
-summary them all in a table like (handout 16)
+BACKWARD ELIMINATION WITH AIC/BIC
+
+```{r}
+interaction.model <- lm(log(price) ~ carat + I(carat^2) + cut + color + clarity +
+                          carat:cut + carat:color + carat:clarity,
+                        data = diamonds.data)
+
+### backward elimination with AIC
+stepAIC(interaction.model,
+        direction = "backward",
+        trace = FALSE,
+        scope = list(lower = intercept.model, upper = interaction.model))
+
+### backward elimination with BIC
+stepAIC(interaction.model,
+        direction = "backward",
+        k = log(nrow(diamonds.data)),
+        trace = FALSE,
+        scope = list(lower = intercept.model, upper = interaction.model))
+```
+
+FORWARD SELECTION WITH AIC/BIC
+
+```{r}
+### forward elimination with AIC
+stepAIC(intercept.model,
+        direction = "forward",
+        trace = FALSE,
+        scope = list(lower = intercept.model, upper = interaction.model))
+
+### forward elimination with BIC
+stepAIC(intercept.model,
+        direction = "forward",
+        k = log(nrow(diamonds.data)),
+        trace = FALSE,
+        scope = list(lower = intercept.model, upper = interaction.model))
+```
+
+STEPWISE SELECTION WITH AIC/BIC
+
+```{r}
+stepAIC(intercept.model,
+        direction = "both",
+        trace = FALSE,
+        scope = list(lower = intercept.model, upper = interaction.model))
+
+### stepwise elimination with BIC
+stepAIC(intercept.model,
+        direction = "both",
+        k = log(nrow(diamonds.data)),
+        trace = FALSE,
+        scope = list(lower = intercept.model, upper = interaction.model))
+```
 
 # Methodst
 
