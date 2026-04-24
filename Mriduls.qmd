@@ -157,10 +157,16 @@ diamonds <- diamonds |>
 
 diamonds <- diamonds |>
   mutate(
-    cut     = factor(cut,     ordered = TRUE),
-    color   = factor(color,   ordered = TRUE),
-    clarity = factor(clarity, ordered = TRUE)
+    cut     = factor(as.character(cut)),
+    color   = factor(as.character(color)),
+    clarity = factor(as.character(clarity))
   )
+
+print(dim(diamonds))
+
+diamonds <- diamonds[diamonds$x != 0 & diamonds$y != 0 & diamonds$z != 0, ]
+
+print(dim(diamonds))
 ```
 
 ## Three visualizations of Price vs. Carat
@@ -369,15 +375,6 @@ mtcars |> glimpse()
 ```
 
 ```{r}
-diamonds$cut_f <- as.factor(diamonds$cut) 
-
-diamonds$color_f <- as.factor(diamonds$color)
-
-diamonds$clarity_f <- as.factor(diamonds$clarity)
-
-```
-
-```{r}
 first_order_model <- lm(price ~ cut_f + color_f + clarity_f + carat, data = diamonds)
 ```
 
@@ -452,27 +449,6 @@ summary(model3)
 
 ```
 
-For Model 4, I again used log(price) with carat, carat\^2, cut, color, and clarity. This model is very similar to Model 2, but it uses the original versions of cut, color, and clarity instead of the factor versions. We used it to compare whether that changes the results.\
-
-```{r}
-model4 <- lm(log(price) ~ carat + I(carat^2) + cut + color + clarity,
-             data = diamonds)
-
-plotResiduals(model4)
-
-```
-
-For Model 5, we took Model 4 and added interaction terms between carat and cut, color, and clarity. This lets the relationship between carat and price be different for different types of diamonds. We used this model to check whether adding those interactions improves the fit.
-
-```{r}
-model5 <- lm(log(price) ~ carat + I(carat^2) + cut + color + clarity +
-               carat:cut + carat:color + carat:clarity,
-             data = diamonds)
-
-plotResiduals(model5)
-
-```
-
 ```{r}
 m1 <- lm(log(price) ~ carat + cut + color + clarity, data = diamonds)
 
@@ -483,37 +459,20 @@ summary(m4)
 
 Get the log-likelihood for the models
 
+We used the log-likelihood to measure model fit. It tells us how well each model matches the data I actually observed. The higher the log-likelihood, the better the model fits. So we looked at these values to compare my models and see which one explained price better.
+
 ```{r}
-data("diamonds")
 diamonds.data <- first_order_model.transformed <- lm(sqrt(price) ~ carat, data = diamonds)
 logLik(first_order_model.transformed)
 
-
-data("diamonds")
 diamonds.data <- model2 <- lm(log(price) ~ carat + I(carat^2) + cut + color + clarity,
              data = diamonds)
 logLik(model2 )
 
-
-data("diamonds")
 diamonds.data <- model3 <- lm(log(price) ~ carat + I(carat^2) + cut + color + clarity+
                carat:cut + carat:color + carat:clarity,
              data = diamonds)
 logLik(model3 )
-
-
-
-data("diamonds")
-diamonds.data <- model4 <- lm(log(price) ~ carat + I(carat^2) + cut + color + clarity,
-             data = diamonds)
-
-logLik(model4 )
-
-data("diamonds")
-diamonds.data <- model5 <- lm(log(price) ~ carat + I(carat^2) + cut + color + clarity +
-               carat:cut + carat:color + carat:clarity,
-             data = diamonds)
-logLik(model5 )
 
 
 #DO THE SAME WITH THE OTHER MODELS 
@@ -522,82 +481,70 @@ logLik(model5 )
 
 ```{r}
 library(GGally)
-ggpairs(diamonds, columns = c(2:14))
+ggpairs(diamonds, columns = c(1:10))
 ```
 
 ```{r}
 library(GGally)
-ggpairs(diamonds, columns = c(2:5))
+ggpairs(diamonds, columns = c(1:4))
 ```
 
-A negativel og-likelihood is expected, as we are usually taking the ln() of numbers less than 1. A higherlog-likelihood (less negative) means the model fits the data better.
+A negative log-likelihood is expected, as we are usually taking the ln() of numbers less than 1. A higherlog-likelihood (less negative) means the model fits the data better.
+
+AIC and BIC
+
+We used AIC and BIC to compare my models and decide which one fits the data best. Both of these measures try to balance two things: how well the model fits the data and how simple the model is. A model can always fit better if we add more variables, but that can make it too complicated, so AIC and BIC penalize models for having too many predictors.
+
+For both AIC and BIC, smaller values are better. When we compare our models, we see that model 3 has the lowest AIC and BIC values, which means it provides the best balance between good fit and not being overly complex. This suggests that including the interaction terms improves the model.
+
+The difference between AIC and BIC is that BIC penalizes complexity more strongly, so it tends to prefer simpler models. In our case, both AIC and BIC agree on the same model, which gives us more confidence in the result.
 
 ```{r}
 
 
-data("diamonds")
 diamonds.data <- first_order_model.transformed <- lm(sqrt(price) ~ carat, data = diamonds)
 
-
-data("diamonds")
 diamonds.data <- model2 <- lm(log(price) ~ carat + I(carat^2) + cut + color + clarity,
              data = diamonds)
 
-
-data("diamonds")
 diamonds.data <- model3 <- lm(log(price) ~ carat + I(carat^2) + cut + color + clarity+
                carat:cut + carat:color + carat:clarity,
              data = diamonds)
 
 
 
-data("diamonds")
-diamonds.data <- model4 <- lm(log(price) ~ carat + I(carat^2) + cut + color + clarity,
-             data = diamonds)
-
-
-data("diamonds")
-diamonds.data <- model5 <- lm(log(price) ~ carat + I(carat^2) + cut + color + clarity +
-               carat:cut + carat:color + carat:clarity,
-             data = diamonds)
-
-
 AIC(first_order_model.transformed )
 AIC(model2)
 AIC(model3)
-AIC(model4)
-AIC(model5)
-
 
 BIC(first_order_model.transformed )
 BIC(model2)
 BIC(model3)
-BIC(model4)
-BIC(model5)
 
 
 ```
 
 Model using backward elimination
 
+Backward selection starts with a full model that includes all the predictors. Then, step by step, it removes the least useful variable based on a criterion like AIC or BIC. At each step, it checks if removing a variable improves the model (lower AIC/BIC). If it does, that variable gets dropped. This process continues until removing any more variables would make the model worse.
+
+In our case, we started with a model that included carat, the squared term, cut, color, clarity, and other variables like x, y, z, depth, and table. Then backward selection evaluated which variables were actually helping explain price. The final model keeps only the variables that improve the model fit while avoiding unnecessary complexity.
+
 ```{r}
 ### library important packages
 library(tidyverse)
 library(MASS)
-
-### load the data set
-data("diamonds")
 
 ### select variables of interest
 diamonds.data <- diamonds |>
   dplyr::select(price, carat, cut, color, clarity)
 
 ### intercept only model
-intercept.model <- lm(log(price) ~ 1, data = diamonds.data)
+intercept.model <- lm(log(price) ~ 1, data = diamondshjhjhjghjhjhjhjhjhhjhjhjhjhhjhjhjjh)
 
 ### fit the model
-first_order_model.transformed <- lm(log(price) ~ carat + I(carat^2) + cut + color + clarity,
-                                    data = diamonds.data)
+first_order_model.transformed <- lm(log(price) ~ carat + I(carat^2) + cut + color + clarity + x + y + z + depth + table,
+                                    data = diamonds)
 
 ### backward elimination with AIC
 stepAIC(first_order_model.transformed,
@@ -608,7 +555,7 @@ stepAIC(first_order_model.transformed,
 ### backward elimination with BIC
 stepAIC(first_order_model.transformed,
         direction = "backward",
-        k = log(nrow(diamonds.data)),
+        k = log(nrow(diamonds)),
         trace = FALSE,
         scope = list(lower = intercept.model, upper = first_order_model.transformed))
 
@@ -635,37 +582,40 @@ model.backward.bic <- stepAIC(first_order_model.transformed ,
 length(coef(model.backward.bic))
 
 ### coefficients, p-values, and adjusted R squared for model based on AIC
-round(summary(model.backward.aic)$coefficients, 4)
+# round(summary(model.backward.aic)$coefficients, 4)
+summary(model.backward.aic)
 
-summary(model.backward.aic)$adj.r.squared
+# summary(model.backward.aic)$adj.r.squared
 
 ### coefficients, p-values, and adjusted R squared for model based on BIC
-round(summary(model.backward.bic)$coefficients, 4)
+#round(summary(model.backward.bic)$coefficients, 4)
+summary(model.backward.bic)
 
-summary(model.backward.bic)$adj.r.squared
+#summary(model.backward.bic)$adj.r.squared
 ```
 
 forward selection
 
+Forward selection starts with a very simple model that only has the intercept, meaning no predictors. Then, one by one, it adds the variable that improves the model the most based on AIC or BIC. At each step, it checks all the variables that are not yet in the model and picks the one that lowers AIC/BIC the most. This continues until adding more variables no longer improves the model.
+
+In our case, we started with just the intercept, and then the model added variables step by step (like x, z, carat, etc.) depending on which one improved the model the most. The final model only includes the predictors that actually help explain price.
+
 ```{r}
-
-
 library(MASS)
 
-intercept.model <- lm(log(price) ~ 1, data = diamonds.data)
-first_order_model.transformed <- lm(log(price) ~ carat + I(carat^2) + cut + color + clarity,
-                                    data = diamonds.data)
+#intercept.model <- lm(log(price) ~ 1, data = diamonds.data)
+#first_order_model.transformed <- lm(log(price) ~ carat + I(carat^2) + cut + color + clarity, data = diamonds.data)
 
 ### forward selection with AIC
 stepAIC(intercept.model,
         direction = "forward",
-        trace = FALSE,
+        trace = TRUE,
         scope = list(lower = intercept.model, upper = first_order_model.transformed))
 
 ### forward selection with BIC
 stepAIC(intercept.model,
         direction = "forward",
-        k = log(nrow(diamonds.data)),
+        k = log(nrow(diamonds)),
         trace = FALSE,
         scope = list(lower = intercept.model, upper = first_order_model.transformed))
 
@@ -678,7 +628,7 @@ stepwise selection
 ### stepwise selection with AIC
 stepAIC(intercept.model,
         direction = "both",
-        trace = FALSE,
+        trace = TRUE,
         scope = list(lower = intercept.model, upper = first_order_model.transformed))
 
 ### stepwise selection with BIC
@@ -689,7 +639,11 @@ stepAIC(intercept.model,
         scope = list(lower = intercept.model, upper = first_order_model.transformed))
 ```
 
-BACKWARD ELIMINATION WITH AIC/BIC
+Backward Elimination with AIC/BIC
+
+Backward elimination with AIC/BIC starts with a full model that includes all the predictors. Then it removes variables one at a time. At each step, it checks which variable can be removed to improve the model the most based on AIC or BIC. If removing a variable lowers AIC or BIC, it gets dropped. This continues until removing any more variables would make the model worse.
+
+The difference is that AIC and BIC are just two different criteria. Both try to balance model fit and simplicity, but BIC penalizes complex models more, so it usually ends up with a simpler model than AIC.
 
 ```{r}
 interaction.model <- lm(log(price) ~ carat + I(carat^2) + cut + color + clarity +
@@ -699,7 +653,7 @@ interaction.model <- lm(log(price) ~ carat + I(carat^2) + cut + color + clarity 
 ### backward elimination with AIC
 stepAIC(interaction.model,
         direction = "backward",
-        trace = FALSE,
+        trace = TRUE,
         scope = list(lower = intercept.model, upper = interaction.model))
 
 ### backward elimination with BIC
@@ -712,11 +666,17 @@ stepAIC(interaction.model,
 
 FORWARD SELECTION WITH AIC/BIC
 
+This output shows how forward selection is building the model step by step. It starts with the simplest model. Then it tries adding each variable one at a time and checks which one improves the model the most based on AIC.
+
+In the first step, it compares adding variables like carat, I(carat\^2), clarity, color, and cut. The AIC values show that adding **carat** gives the lowest AIC (the biggest improvement), so the model chooses carat first.
+
+Then it updates the model to log(price) \~ carat and continues the same process, it will try adding the remaining variables one by one and pick the one that lowers AIC the most. This continues until adding more variables no longer improves the model.
+
 ```{r}
 ### forward elimination with AIC
 stepAIC(intercept.model,
         direction = "forward",
-        trace = FALSE,
+        trace = TRUE,
         scope = list(lower = intercept.model, upper = interaction.model))
 
 ### forward elimination with BIC
@@ -729,10 +689,16 @@ stepAIC(intercept.model,
 
 STEPWISE SELECTION WITH AIC/BIC
 
+Stepwise selection is a combination of forward and backward selection. It starts with a simple model (the intercept), and then at each step it can either add a variable or remove one depending on what improves the model the most based on AIC or BIC.
+
+So instead of only adding (like forward) or only removing (like backward), it does both. It keeps checking if adding a new variable helps, but also if removing an existing variable makes the model better. This continues until no more changes improve the model.
+
+In our code, I used direction = "both" , which tells R to do this process. The model starts simple and moves toward the full interaction model, but only keeps the variables that actually improve the fit.
+
 ```{r}
 stepAIC(intercept.model,
         direction = "both",
-        trace = FALSE,
+        trace = TRUE,
         scope = list(lower = intercept.model, upper = interaction.model))
 
 ### stepwise elimination with BIC
